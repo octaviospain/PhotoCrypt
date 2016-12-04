@@ -19,7 +19,6 @@
 
 package com.transgressoft.photocrypt.model;
 
-import com.sun.tools.javac.util.List;
 import com.transgressoft.photocrypt.*;
 import org.junit.jupiter.api.*;
 
@@ -52,7 +51,7 @@ public class AlbumTest {
     @Test
     @DisplayName("Encrypt All")
     void encryptAllTest() {
-        fail("Not implemented yet");
+
     }
 
     @Test
@@ -97,18 +96,20 @@ public class AlbumTest {
     @Test
     @DisplayName ("Photos")
     void photosTest() {
-        Album album = new Album("Trip to Hawaii");
+        Photo apachePhoto = new Photo(apachePhotoPath);
         Photo gnuPhoto = new Photo(gnuPhotoPath);
-        List<Photo> photos = List.of(gnuPhoto);
+        List<Photo> photos = new ArrayList<>();
+        photos.add(apachePhoto);
+
+        Album album = new Album("Trip to Hawaii");
         album.addPhotos(photos);
 
         assertEquals(photos, album.getPhotos());
 
-        Photo apachePhoto = new Photo(apachePhotoPath);
-        List<Photo> morePhotos = List.of(apachePhoto);
-        album.addPhotos(morePhotos);
+        photos.add(gnuPhoto);
+        album.addPhotos(Collections.singleton(gnuPhoto));
 
-        assertEquals(List.of(gnuPhoto, apachePhoto), album.getPhotos());
+        assertEquals(photos, album.getPhotos());
     }
 
     @Test
@@ -125,7 +126,9 @@ public class AlbumTest {
         Album album = new Album("Trip to Hawaii");
         Photo apachePhoto = new Photo(apachePhotoPath);
         Photo gnuPhoto = new Photo(gnuPhotoPath);
-        List<Photo> photos = List.of(apachePhoto, gnuPhoto);
+        List<Photo> photos = new ArrayList<>();
+        photos.add(apachePhoto);
+        photos.add(gnuPhoto);
         album.addPhotos(photos);
         int hash = 73;
         hash = 73 * hash + "Trip to Hawaii".hashCode();
@@ -140,11 +143,11 @@ public class AlbumTest {
     void equalsTest() {
         Album album = new Album("Trip to Hawaii");
         Photo apachePhoto = new Photo(apachePhotoPath);
-        album.addPhotos(List.of(apachePhoto));
+        album.addPhotos(Collections.singletonList(apachePhoto));
 
         Album album2 = new Album("Trip to Hawaii");
         Photo gnuPhoto = new Photo(gnuPhotoPath);
-        album2.addPhotos(List.of(gnuPhoto));
+        album2.addPhotos(Collections.singletonList(gnuPhoto));
 
         assertFalse(album.equals(album2));
 
