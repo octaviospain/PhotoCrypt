@@ -1,0 +1,8 @@
+.DS_Store
+.DS_Store
+.project
+.classpath
+
+.idea
+*.iml
+*.fxbuild

@@ -1,0 +1,20 @@
+language: java
+
+branches:
+  only:
+  - master
+
+jdk:
+  - oraclejdk8
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
+script: mvn clean test
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
