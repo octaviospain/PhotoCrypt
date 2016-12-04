@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/octaviospain/PhotoCrypt.svg?branch=master)](https://travis-ci.org/octaviospain/PhotoCrypt)
+[![codecov](https://codecov.io/gh/octaviospain/PhotoCrypt/branch/master/graph/badge.svg)](https://codecov.io/gh/octaviospain/PhotoCrypt)
+[![license](https://img.shields.io/badge/license-GPL3v2-brightgreen.svg)](https://github.com/octaviospain/PhotoCrypt/blob/master/license/gpl.txt)
+
 # PhotoCrypt
 PhotoCrypt is an application that organizes a photo library allowing the possibility to encrypt the image files.
 
