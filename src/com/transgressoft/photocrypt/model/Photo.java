@@ -19,12 +19,14 @@
 
 package com.transgressoft.photocrypt.model;
 
+import com.transgressoft.photocrypt.crypto.*;
+
 import java.nio.file.*;
 
 /**
  * @author Octavio Calleya
  */
-public class Photo extends MediaItem {
+public class Photo extends CryptableItemBase {
 
     public Photo(Path filePath) {
         super(filePath);

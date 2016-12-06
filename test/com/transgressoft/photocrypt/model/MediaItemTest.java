@@ -64,14 +64,6 @@ public class MediaItemTest {
     }
 
     @Test
-    @DisplayName ("Is encrypted")
-    void idTest() {
-        Photo photo = new Photo(gnuPhotoPath);
-        photo.setEncrypted(true);
-        assertTrue(photo.isEncrypted());
-    }
-
-    @Test
     @DisplayName ("File path")
     void filePathTest() {
         Photo photo = new Photo(gnuPhotoPath);
