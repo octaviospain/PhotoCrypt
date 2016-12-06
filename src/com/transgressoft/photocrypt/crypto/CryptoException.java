@@ -17,21 +17,26 @@
  * Copyright (C) 2016 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
-
-import javax.crypto.*;
+package com.transgressoft.photocrypt.crypto;
 
 /**
+ * This exception is thrown if an attempt to encrypt or decrypt
+ * a {@link com.transgressoft.photocrypt.model.MediaItem} instance was unsuccessful.
+ *
  * @author Octavio Calleya
  * @version 0.1
  */
-public abstract class CryptableItemBase implements CryptableItem {
+public class CryptoException extends Exception {
 
-    public void encrypt(Cipher cipher) {
-
+    public CryptoException() {
+        super();
     }
 
-    public void decrypt(Cipher cipher) {
+    public CryptoException(String message) {
+        super(message);
+    }
 
+    public CryptoException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

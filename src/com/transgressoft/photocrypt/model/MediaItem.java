@@ -29,18 +29,17 @@ import java.util.*;
  * @author Octavio Calleya
  * @version 0.1
  */
-public abstract class MediaItem extends CryptableItemBase {
+public abstract class MediaItem {
 
     private int id;
-    private boolean isEncrypted;
-    private String fileFolder;
-    private String fileName;
+    protected String fileFolder;
+    protected String fileName;
     private String title;
     private String description;
     private String location;
     private Optional<LocalDate> date;
 
-    MediaItem(Path pathToMedia) {
+    public MediaItem(Path pathToMedia) {
         id = PhotoCryptPreferences.getInstance().getMediaItemSequence();
         fileFolder = pathToMedia.toFile().getParent();
         fileName = pathToMedia.getFileName().toString();
@@ -52,14 +51,6 @@ public abstract class MediaItem extends CryptableItemBase {
 
     public int getId() {
         return id;
-    }
-
-    public boolean isEncrypted() {
-        return isEncrypted;
-    }
-
-    public void setEncrypted(boolean encrypted) {
-        isEncrypted = encrypted;
     }
 
     public String getFileFolder() {

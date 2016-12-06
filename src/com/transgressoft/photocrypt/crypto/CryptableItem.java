@@ -17,9 +17,7 @@
  * Copyright (C) 2016 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
-
-import javax.crypto.*;
+package com.transgressoft.photocrypt.crypto;
 
 /**
  * @author Octavio Calleya
@@ -27,7 +25,7 @@ import javax.crypto.*;
  */
 public interface CryptableItem {
 
-    void encrypt(Cipher cipher);
+    void encrypt(final String key) throws CryptoException;
 
-    void decrypt(Cipher cipher);
+    void decrypt(final String key) throws CryptoException;
 }
