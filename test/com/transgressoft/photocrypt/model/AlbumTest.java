@@ -51,7 +51,10 @@ public class AlbumTest {
     @Test
     @DisplayName("Encrypt All")
     void encryptAllTest() {
-
+        Album album = new Album("Trip to Hawaii");
+        UnsupportedOperationException exception = expectThrows(UnsupportedOperationException.class,
+                                                 () -> album.encryptAll());
+        assertEquals("Unsupported yet", exception.getMessage());
     }
 
     @Test
@@ -139,7 +142,7 @@ public class AlbumTest {
     }
 
     @Test
-    @DisplayName("equals")
+    @DisplayName("Equals")
     void equalsTest() {
         Album album = new Album("Trip to Hawaii");
         Photo apachePhoto = new Photo(apachePhotoPath);
@@ -155,5 +158,29 @@ public class AlbumTest {
         album2.getPhotos().add(apachePhoto);
 
         assertTrue(album.equals(album2));
+    }
+
+    @Test
+    @DisplayName("Not Equals with other class")
+    void notEqualsTest() {
+        Album album = new Album("Trip to Hawaii");
+        assertFalse(album.equals(apachePhotoPath));
+    }
+
+    @Test
+    @DisplayName("Not Equals with different location album")
+    void notEqualsDifferentLocationTest() {
+        Album album = new Album("Trip to Hawaii");
+        Album album2 = new Album("Trip to Hawaii");
+        album2.setLocation("Hawaii");
+        assertFalse(album.equals(album2));
+    }
+
+    @Test
+    @DisplayName("Not Equals with different name album")
+    void notEqualsDifferentNameTest() {
+        Album album = new Album("Trip to Hawaii");
+        Album album2 = new Album("Trip to Maldives");
+        assertFalse(album.equals(album2));
     }
 }

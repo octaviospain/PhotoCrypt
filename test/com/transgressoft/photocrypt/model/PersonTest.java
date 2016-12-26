@@ -78,12 +78,20 @@ public class PersonTest {
     }
 
     @Test
-    @DisplayName("equals")
+    @DisplayName("Equals")
     void equalsTest() {
         Person linus = new Person("Linus Torvalds");
         Person dennis = new Person("Dennis Ritchie");
         Person linus2 = new Person("Linus Torvalds");
         assertFalse(linus.equals(dennis));
         assertTrue(linus.equals(linus2));
+    }
+
+    @Test
+    @DisplayName("Not equals with class")
+    void notEqualsTest() {
+        Person linus = new Person("Linus Torvalds");
+        Album album = new Album("Album");
+        assertFalse(linus.equals(album));
     }
 }

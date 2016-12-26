@@ -55,12 +55,9 @@ public class MediaItemTest {
         Photo photo = new Photo(gnuPhotoPath);
         assertAll(() -> assertEquals(gnuPhotoPath.getFileName().toString(), photo.getFileName()),
                   () -> assertEquals(gnuPhotoPath.toFile().getParent(), photo.getFileFolder()),
-                  () -> assertEquals(1, photo.getId()),
-                  () -> assertEquals(Optional.empty(), photo.getDate()),
-                  () -> assertTrue(photo.getTitle().isEmpty()),
-                  () -> assertTrue(photo.getDescription().isEmpty()),
-                  () -> assertTrue(photo.getLocation().isEmpty()),
-                  () -> assertFalse(photo.isEncrypted()));
+                  () -> assertEquals(1, photo.getId()), () -> assertEquals(Optional.empty(), photo.getDate()),
+                  () -> assertTrue(photo.getTitle().isEmpty()), () -> assertTrue(photo.getDescription().isEmpty()),
+                  () -> assertTrue(photo.getLocation().isEmpty()), () -> assertFalse(photo.isEncrypted()));
     }
 
     @Test
@@ -131,5 +128,26 @@ public class MediaItemTest {
         Photo apachePhoto = new Photo(apachePhotoPath);
         assertFalse(gnuPhoto.equals(apachePhoto));
         assertTrue(gnuPhoto.equals(gnuPhoto2));
+    }
+
+    @Test
+    @DisplayName ("Not Equals with other class")
+    void notEqualsTest() {
+        Photo gnuPhoto = new Photo(gnuPhotoPath);
+        Album album = new Album("Album");
+        assertFalse(gnuPhoto.equals(album));
+    }
+
+    @Test
+    @DisplayName ("Not Equals photo in other folder")
+    void notEqualsDifferentFolder() throws Exception {
+        Photo gnuPhoto = new Photo(gnuPhotoPath);
+
+        File photoPathTemporary =  File.createTempFile("photo_apache.jpg", "");
+        photoPathTemporary.deleteOnExit();
+        Files.copy(apachePhotoPath, photoPathTemporary.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Photo apachePhoto = new Photo(photoPathTemporary.toPath());
+
+        assertFalse(gnuPhoto.equals(apachePhoto));
     }
 }

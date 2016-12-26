@@ -17,17 +17,16 @@
  * Copyright (C) 2016 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
+package com.transgressoft.photocrypt.crypto;
 
-import com.transgressoft.photocrypt.crypto.*;
+import com.transgressoft.photocrypt.model.*;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
 import java.nio.file.*;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardCopyOption.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.expectThrows;
 
 /**
  * @author Octavio Calleya
@@ -43,7 +42,7 @@ public class CryptableItemBaseTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        photoPathTemporary =  File.createTempFile(gnuPhotoFileName, "");
+        photoPathTemporary = File.createTempFile(gnuPhotoFileName, "");
         photoPathTemporary.deleteOnExit();
         photoPathTemporaryEncrypted = new File(photoPathTemporary.getAbsolutePath() + ENCRYPTED_EXTENSION);
         photoPathTemporaryEncrypted.deleteOnExit();
@@ -79,9 +78,18 @@ public class CryptableItemBaseTest {
 
         assertTrue(encryptedFile.exists());
 
-        CryptoException exception = expectThrows(CryptoException.class,
-                                                 () -> gnuPhoto.encrypt(password));
+        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(password));
         assertEquals("Media item already encrypted", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName ("Encryption failed")
+    void encryptionFailed() throws Exception {
+        Photo gnuPhoto = new Photo(new File("nonexistentfile.jpg").toPath());
+
+        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(""));
+        assertTrue(exception.getMessage().contains("Error encrypting media item "));
+        assertTrue(exception.getMessage().contains("(No such file or directory)"));
     }
 
     @Test
@@ -96,5 +104,17 @@ public class CryptableItemBaseTest {
 
         assertTrue(photoPathTemporary.exists());
         assertFalse(encryptedFile.exists());
+    }
+
+    @Test
+    @DisplayName ("Decrypt an already decrypted item")
+    void invalidDecryption() throws Exception {
+        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        String password = "Symmetric encryption password";
+
+        assertFalse(gnuPhoto.isEncrypted());
+
+        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.decrypt(password));
+        assertEquals("Media item is not encrypted", exception.getMessage());
     }
 }

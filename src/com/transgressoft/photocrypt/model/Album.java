@@ -44,7 +44,7 @@ public class Album {
     }
 
     public void encryptAll() {
-
+        throw new UnsupportedOperationException("Unsupported yet");
     }
 
     public int getId() {
