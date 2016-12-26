@@ -30,6 +30,9 @@ import java.security.*;
 import java.util.*;
 
 /**
+ * Represents a media file such as a photo or a video that is capable of
+ * being encrypted and decrypted.
+ *
  * @author Octavio Calleya
  * @version 0.1
  */
