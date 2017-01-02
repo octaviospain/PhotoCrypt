@@ -19,6 +19,7 @@
 
 package com.transgressoft.photocrypt.crypto;
 
+import com.transgressoft.photocrypt.error.*;
 import com.transgressoft.photocrypt.model.*;
 import org.slf4j.*;
 
@@ -28,6 +29,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
+
+import static com.transgressoft.photocrypt.error.ErrorCase.*;
 
 /**
  * Represents a media file such as a photo or a video that is capable of
@@ -46,6 +49,8 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
     private boolean isEncrypted;
     private Cipher cipher;
 
+    protected ErrorDaemon errorDaemon = ErrorDaemon.getInstance();
+
     public CryptableItemBase(Path pathToMedia) {
         super(pathToMedia);
     }
@@ -56,14 +61,14 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
 
     public void encrypt(final String password) throws CryptoException {
         if (isEncrypted)
-            throw new CryptoException("Media item already encrypted");
+            throw errorDaemon.exception(ITEM_ALREADY_ENCRYPTED);
         doCrypto(Cipher.ENCRYPT_MODE, password);
         isEncrypted = true;
     }
 
     public void decrypt(final String password) throws CryptoException {
         if (! isEncrypted)
-            throw new CryptoException("Media item is not encrypted");
+            throw errorDaemon.exception(ITEM_NOT_ENCRYPTED);
         doCrypto(Cipher.DECRYPT_MODE, password);
         isEncrypted = false;
     }
@@ -89,9 +94,9 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
         catch (InvalidKeyException | IOException | BadPaddingException | IllegalBlockSizeException |
                 NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException exception) {
             fileName = fileName.replaceAll(ENCRYPTED_EXTENSION, "");
-            String errorMessage = "Error encrypting media item " + this.toString() + ": " + exception.getMessage();
+            String errorMessage = CRYPTO_ERROR.getErrorMessage() + " " + this.toString() + ": " + exception.getMessage();
             LOG.error(errorMessage, exception);
-            throw new CryptoException(errorMessage, exception);
+            throw errorDaemon.exception(CRYPTO_ERROR, exception);
         }
     }
 

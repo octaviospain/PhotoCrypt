@@ -17,19 +17,34 @@
  * Copyright (C) 2016 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
+package com.transgressoft.photocrypt.error;
 
-import com.transgressoft.photocrypt.crypto.*;
-
-import java.nio.file.*;
+import java.util.concurrent.atomic.*;
 
 /**
+ * Singleton class that handles the exceptions.
+ *
  * @author Octavio Calleya
  * @version 0.1
  */
-public class Photo extends CryptableItemBase {
+public class ErrorDaemon {
 
-    public Photo(Path filePath) {
-        super(filePath);
+    private AtomicInteger errorCount = new AtomicInteger(0);
+
+    public static ErrorDaemon getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
+
+    private static class InstanceHolder {
+
+        static final ErrorDaemon INSTANCE = new ErrorDaemon();
+    }
+
+    public CryptoException exception(ErrorCase errorCase) {
+        return new CryptoException(errorCount.getAndIncrement(), errorCase);
+    }
+
+    public CryptoException exception(ErrorCase errorCase, Throwable cause) {
+        return new CryptoException(errorCount.getAndIncrement(), errorCase, cause);
     }
 }
