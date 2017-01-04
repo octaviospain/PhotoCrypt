@@ -14,12 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
 package com.transgressoft.photocrypt.crypto;
 
+import com.transgressoft.photocrypt.error.*;
 import com.transgressoft.photocrypt.model.*;
+import org.apache.commons.io.*;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
@@ -38,15 +40,40 @@ public class CryptableItemBaseTest {
     String gnuPhotoFileName = "photo_gnu.png";
     Path photoPath = Paths.get("test-resources", gnuPhotoFileName);
     File photoPathTemporary;
-    File photoPathTemporaryEncrypted;
 
     @BeforeEach
     void beforeEach() throws Exception {
         photoPathTemporary = File.createTempFile(gnuPhotoFileName, "");
         photoPathTemporary.deleteOnExit();
-        photoPathTemporaryEncrypted = new File(photoPathTemporary.getAbsolutePath() + ENCRYPTED_EXTENSION);
-        photoPathTemporaryEncrypted.deleteOnExit();
         Files.copy(photoPath, photoPathTemporary.toPath(), REPLACE_EXISTING);
+    }
+
+    @Test
+    @DisplayName ("Encrypt and decrypt")
+    void encryptDecrypt() throws Exception {
+        File photoCopy = File.createTempFile(gnuPhotoFileName, "");
+        photoCopy.deleteOnExit();
+        Files.copy(photoPathTemporary.toPath(), photoCopy.toPath(), REPLACE_EXISTING);
+
+        assertTrue(FileUtils.contentEquals(photoPathTemporary, photoCopy));
+
+        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        String password = "Symmetric encryption password";
+
+
+        gnuPhoto.encrypt(password);
+        File encryptedFile = new File(photoPathTemporary.toString() + ENCRYPTED_EXTENSION);
+
+        assertTrue(encryptedFile.exists());
+        assertFalse(photoPathTemporary.exists());
+        assertFalse(FileUtils.contentEquals(photoPathTemporary, photoCopy));
+
+
+        gnuPhoto.decrypt(password);
+
+        assertTrue(photoPathTemporary.exists());
+        assertFalse(encryptedFile.exists());
+        assertTrue(FileUtils.contentEquals(photoPathTemporary, photoCopy));
     }
 
     @Test
@@ -85,11 +112,11 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Encryption failed")
     void encryptionFailed() throws Exception {
-        Photo gnuPhoto = new Photo(new File("nonexistentfile.jpg").toPath());
+        Photo gnuPhoto = new Photo(new File("./nonexistentfile.jpg").toPath());
 
         CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(""));
-        assertTrue(exception.getMessage().contains("Error encrypting media item "));
-        assertTrue(exception.getMessage().contains("(No such file or directory)"));
+        assertEquals("Error applying crypto to media item", exception.getMessage());
+        assertTrue(exception.getCause().getMessage().contains("(No such file or directory)"));
     }
 
     @Test

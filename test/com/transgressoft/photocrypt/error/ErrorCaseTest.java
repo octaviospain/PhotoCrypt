@@ -17,19 +17,26 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
+package com.transgressoft.photocrypt.error;
 
-import com.transgressoft.photocrypt.crypto.*;
+import org.junit.jupiter.api.*;
 
-import java.nio.file.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Octavio Calleya
- * @version 0.1
  */
-public class Photo extends CryptableItemBase {
+public class ErrorCaseTest {
 
-    public Photo(Path filePath) {
-        super(filePath);
+    @Test
+    @DisplayName ("Title")
+    void titleTest() {
+        assertEquals("ENCRYPT_DECRYPT", ErrorCase.CRYPTO_ERROR.getTitle());
+    }
+
+    @Test
+    @DisplayName("toString")
+    void toStringTest() {
+        assertEquals("ITEM_NOT_ENCRYPTED_Media item is not encrypted", ErrorCase.ITEM_NOT_ENCRYPTED.toString());
     }
 }

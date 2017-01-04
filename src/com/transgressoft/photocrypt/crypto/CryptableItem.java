@@ -14,10 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
 package com.transgressoft.photocrypt.crypto;
+
+import com.transgressoft.photocrypt.error.*;
 
 /**
  * @author Octavio Calleya

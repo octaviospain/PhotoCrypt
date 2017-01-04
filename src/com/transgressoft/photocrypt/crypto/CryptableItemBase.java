@@ -14,11 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
 package com.transgressoft.photocrypt.crypto;
 
+import com.transgressoft.photocrypt.error.*;
 import com.transgressoft.photocrypt.model.*;
 import org.slf4j.*;
 
@@ -28,6 +29,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
+
+import static com.transgressoft.photocrypt.error.ErrorCase.*;
 
 /**
  * Represents a media file such as a photo or a video that is capable of
@@ -43,8 +46,12 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
     private static final String ALGORITHM = "AES/CTR/NoPadding";
     private static final String ENCRYPTED_EXTENSION = ".enc";
 
+    protected ErrorDaemon errorDaemon = ErrorDaemon.getInstance();
+
     private boolean isEncrypted;
     private Cipher cipher;
+    private IvParameterSpec initializationVector;
+
 
     public CryptableItemBase(Path pathToMedia) {
         super(pathToMedia);
@@ -54,26 +61,47 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
         return isEncrypted;
     }
 
+    /**
+     * Performs the encryption applying the <tt>ALGORITHM</tt> cryptography suite.
+     * The name of the encrypted file is be the same as the original with <tt>.enc</tt> at the end,
+     * in the same folder where the original file was.
+     * The original file is deleted if the encryption is successful.
+     *
+     * @param password The <tt>String</tt> used as password for the encryption process.
+     *
+     * @throws CryptoException If something goes wrong.
+     */
     public void encrypt(final String password) throws CryptoException {
         if (isEncrypted)
-            throw new CryptoException("Media item already encrypted");
+            throw errorDaemon.exception(ITEM_ALREADY_ENCRYPTED);
         doCrypto(Cipher.ENCRYPT_MODE, password);
         isEncrypted = true;
     }
 
+    /**
+     * Performs the decryption applying the <tt>ALGORITHM</tt> cryptography suite.
+     * The name of the decrypted file wil be the original one without the <tt>.enc</tt> suffix.
+     * The previous decrypted file is deleted if the decryption is successful.
+     *
+     * @param password The <tt>String</tt> used as password for the decryption process.
+     *
+     * @throws CryptoException If something goes wrong.
+     */
     public void decrypt(final String password) throws CryptoException {
         if (! isEncrypted)
-            throw new CryptoException("Media item is not encrypted");
+            throw errorDaemon.exception(ITEM_NOT_ENCRYPTED);
         doCrypto(Cipher.DECRYPT_MODE, password);
         isEncrypted = false;
     }
 
     private void doCrypto(int mode, final String password) throws CryptoException {
         try {
+            if (mode == Cipher.ENCRYPT_MODE) {
+                cipher = Cipher.getInstance(ALGORITHM);
+                initializationVector = createInitializationVector();
+            }
             byte[] keyHash = createPasswordHash(password);
             SecretKeySpec keySpec = new SecretKeySpec(keyHash, "AES");
-            cipher = Cipher.getInstance(ALGORITHM);
-            IvParameterSpec initializationVector = createInitializationVector();
             cipher.init(mode, keySpec, initializationVector);
 
 
@@ -89,9 +117,9 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
         catch (InvalidKeyException | IOException | BadPaddingException | IllegalBlockSizeException |
                 NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException exception) {
             fileName = fileName.replaceAll(ENCRYPTED_EXTENSION, "");
-            String errorMessage = "Error encrypting media item " + this.toString() + ": " + exception.getMessage();
+            String errorMessage = CRYPTO_ERROR.getErrorMessage() + " " + this.toString() + ": " + exception.getMessage();
             LOG.error(errorMessage, exception);
-            throw new CryptoException(errorMessage, exception);
+            throw errorDaemon.exception(CRYPTO_ERROR, exception);
         }
     }
 

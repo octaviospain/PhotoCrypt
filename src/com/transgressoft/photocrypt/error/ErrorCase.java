@@ -14,25 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.crypto;
+package com.transgressoft.photocrypt.error;
 
 /**
- * This exception is thrown if an attempt to encrypt or decrypt
- * a {@link com.transgressoft.photocrypt.model.MediaItem} instance was unsuccessful.
- *
  * @author Octavio Calleya
  * @version 0.1
  */
-public class CryptoException extends Exception {
+public enum ErrorCase {
 
-    public CryptoException(String message) {
-        super(message);
+    CRYPTO_ERROR("ENCRYPT_DECRYPT", "Error applying crypto to media item"),
+    ITEM_NOT_ENCRYPTED("ITEM_NOT_ENCRYPTED", "Media item is not encrypted"),
+    ITEM_ALREADY_ENCRYPTED("ITEM_ALREADY_ENCRYPTED", "Media item already encrypted");
+
+    private String title;
+    private String errorMessage;
+
+    ErrorCase(String title, String errorMessage) {
+        this.title = title;
+        this.errorMessage = errorMessage;
     }
 
-    public CryptoException(String message, Throwable cause) {
-        super(message, cause);
+    public String getTitle() {
+        return this.title;
+    }
+
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    @Override
+    public String toString() {
+        return title + "_" + errorMessage;
     }
 }

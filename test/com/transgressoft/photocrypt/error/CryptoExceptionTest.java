@@ -17,19 +17,21 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
+package com.transgressoft.photocrypt.error;
 
-import com.transgressoft.photocrypt.crypto.*;
+import org.junit.jupiter.api.*;
 
-import java.nio.file.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Octavio Calleya
- * @version 0.1
  */
-public class Photo extends CryptableItemBase {
+public class CryptoExceptionTest {
 
-    public Photo(Path filePath) {
-        super(filePath);
+    @Test
+    @DisplayName("toString")
+    void toStringTest() {
+        CryptoException exception = new CryptoException(0, ErrorCase.CRYPTO_ERROR);
+        assertEquals("[0 ENCRYPT_DECRYPT]: Error applying crypto to media item", exception.toString());
     }
 }
