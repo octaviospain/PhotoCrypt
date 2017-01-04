@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
 package com.transgressoft.photocrypt.crypto;
@@ -46,10 +46,12 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
     private static final String ALGORITHM = "AES/CTR/NoPadding";
     private static final String ENCRYPTED_EXTENSION = ".enc";
 
+    protected ErrorDaemon errorDaemon = ErrorDaemon.getInstance();
+
     private boolean isEncrypted;
     private Cipher cipher;
+    private IvParameterSpec initializationVector;
 
-    protected ErrorDaemon errorDaemon = ErrorDaemon.getInstance();
 
     public CryptableItemBase(Path pathToMedia) {
         super(pathToMedia);
@@ -59,6 +61,16 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
         return isEncrypted;
     }
 
+    /**
+     * Performs the encryption applying the <tt>ALGORITHM</tt> cryptography suite.
+     * The name of the encrypted file is be the same as the original with <tt>.enc</tt> at the end,
+     * in the same folder where the original file was.
+     * The original file is deleted if the encryption is successful.
+     *
+     * @param password The <tt>String</tt> used as password for the encryption process.
+     *
+     * @throws CryptoException If something goes wrong.
+     */
     public void encrypt(final String password) throws CryptoException {
         if (isEncrypted)
             throw errorDaemon.exception(ITEM_ALREADY_ENCRYPTED);
@@ -66,6 +78,15 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
         isEncrypted = true;
     }
 
+    /**
+     * Performs the decryption applying the <tt>ALGORITHM</tt> cryptography suite.
+     * The name of the decrypted file wil be the original one without the <tt>.enc</tt> suffix.
+     * The previous decrypted file is deleted if the decryption is successful.
+     *
+     * @param password The <tt>String</tt> used as password for the decryption process.
+     *
+     * @throws CryptoException If something goes wrong.
+     */
     public void decrypt(final String password) throws CryptoException {
         if (! isEncrypted)
             throw errorDaemon.exception(ITEM_NOT_ENCRYPTED);
@@ -75,10 +96,12 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
 
     private void doCrypto(int mode, final String password) throws CryptoException {
         try {
+            if (mode == Cipher.ENCRYPT_MODE) {
+                cipher = Cipher.getInstance(ALGORITHM);
+                initializationVector = createInitializationVector();
+            }
             byte[] keyHash = createPasswordHash(password);
             SecretKeySpec keySpec = new SecretKeySpec(keyHash, "AES");
-            cipher = Cipher.getInstance(ALGORITHM);
-            IvParameterSpec initializationVector = createInitializationVector();
             cipher.init(mode, keySpec, initializationVector);
 
 

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Musicott. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Octavio Calleya
+ * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
 package com.transgressoft.photocrypt.crypto;
@@ -112,7 +112,7 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Encryption failed")
     void encryptionFailed() throws Exception {
-        Photo gnuPhoto = new Photo(new File("nonexistentfile.jpg").toPath());
+        Photo gnuPhoto = new Photo(new File("./nonexistentfile.jpg").toPath());
 
         CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(""));
         assertEquals("Error applying crypto to media item", exception.getMessage());
