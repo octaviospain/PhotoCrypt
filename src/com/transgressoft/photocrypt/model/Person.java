@@ -19,7 +19,11 @@
 
 package com.transgressoft.photocrypt.model;
 
-import com.transgressoft.photocrypt.*;
+import com.google.inject.*;
+import com.google.inject.assistedinject.*;
+import com.transgressoft.photocrypt.util.guice.annotations.*;
+
+import java.util.*;
 
 /**
  * @author Octavio Calleya
@@ -30,8 +34,9 @@ public class Person {
     private int id;
     private String fullName;
 
-    public Person(String fullName) {
-        id = PhotoCryptPreferences.getInstance().getPersonSequence();
+    @Inject
+    public Person(@PersonSequence int id, @Assisted String fullName) {
+        this.id = id;
         this.fullName = fullName;
     }
 
@@ -54,8 +59,7 @@ public class Person {
 
     @Override
     public int hashCode() {
-        int hash = 73 + fullName.hashCode();
-        return hash;
+        return Objects.hash(fullName);
     }
 
     @Override

@@ -19,8 +19,14 @@
 
 package com.transgressoft.photocrypt.model;
 
+import com.google.inject.*;
 import com.transgressoft.photocrypt.*;
+import com.transgressoft.photocrypt.tests.*;
+import com.transgressoft.photocrypt.util.guice.factories.*;
+import com.transgressoft.photocrypt.util.guice.modules.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
 
 import java.io.*;
 import java.nio.file.*;
@@ -28,34 +34,37 @@ import java.time.*;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Octavio Calleya
  * @version 0.1
  */
+@ExtendWith (MockitoExtension.class)
 public class MediaItemTest {
-
-    String home = System.getProperty("os.home");
+    
+    @Mock
+    PhotoCryptPreferences preferencesMock;
+    MediaItemFactory mediaItemFactory;
+    Injector injector;
     Path gnuPhotoPath = Paths.get("test-resources", "photo_gnu.png");
     Path apachePhotoPath = Paths.get("test-resources", "photo_apache.jpg");
 
     @BeforeEach
     void beforeEach() {
-        PhotoCryptPreferences.getInstance().setPhotoCryptUserFolder(home + "PhotoCrypt" + File.separator);
+        injector = Guice.createInjector(binder -> binder.bind(PhotoCryptPreferences.class).toInstance(preferencesMock));
+        injector = injector.createChildInjector(new PhotoCryptModule());
+        when(preferencesMock.getMediaItemSequence()).thenReturn(0);
+        mediaItemFactory = injector.getInstance(MediaItemFactory.class);
     }
-
-    @AfterEach
-    void afterEach() {
-        assertTrue(new File(home + "PhotoCrypt" + File.separator).delete());
-    }
-
+    
     @Test
     @DisplayName ("Constructor")
     void constructorTest() {
-        Photo photo = new Photo(gnuPhotoPath);
+        Photo photo = mediaItemFactory.create(gnuPhotoPath);
         assertAll(() -> assertEquals(gnuPhotoPath.getFileName().toString(), photo.getFileName()),
                   () -> assertEquals(gnuPhotoPath.toFile().getParent(), photo.getFileFolder()),
-                  () -> assertEquals(1, photo.getId()), () -> assertEquals(Optional.empty(), photo.getDate()),
+                  () -> assertEquals(0, photo.getId()), () -> assertEquals(Optional.empty(), photo.getDate()),
                   () -> assertTrue(photo.getTitle().isEmpty()), () -> assertTrue(photo.getDescription().isEmpty()),
                   () -> assertTrue(photo.getLocation().isEmpty()), () -> assertFalse(photo.isEncrypted()));
     }
@@ -63,7 +72,7 @@ public class MediaItemTest {
     @Test
     @DisplayName ("File path")
     void filePathTest() {
-        Photo photo = new Photo(gnuPhotoPath);
+        Photo photo = mediaItemFactory.create(gnuPhotoPath);
         photo.setFileFolder(gnuPhotoPath);
         assertEquals(gnuPhotoPath.toFile().getParent(), photo.getFileFolder());
         assertEquals(gnuPhotoPath.getFileName().toString(), photo.getFileName());
@@ -72,7 +81,7 @@ public class MediaItemTest {
     @Test
     @DisplayName ("Title")
     void titleTest() {
-        Photo photo = new Photo(apachePhotoPath);
+        Photo photo = mediaItemFactory.create(apachePhotoPath);
         photo.setTitle("Apaches everywhere!");
         assertEquals("Apaches everywhere!", photo.getTitle());
     }
@@ -80,7 +89,7 @@ public class MediaItemTest {
     @Test
     @DisplayName ("Description")
     void descriptionTest() {
-        Photo photo = new Photo(apachePhotoPath);
+        Photo photo = mediaItemFactory.create(apachePhotoPath);
         photo.setDescription("Are you apache?");
         assertEquals("Are you apache?", photo.getDescription());
     }
@@ -88,7 +97,7 @@ public class MediaItemTest {
     @Test
     @DisplayName ("Location")
     void locationTest() {
-        Photo photo = new Photo(apachePhotoPath);
+        Photo photo = mediaItemFactory.create(apachePhotoPath);
         photo.setLocation("Far west");
         assertEquals("Far west", photo.getLocation());
     }
@@ -96,7 +105,7 @@ public class MediaItemTest {
     @Test
     @DisplayName ("Datetime")
     void dateTime() {
-        Photo photo = new Photo(apachePhotoPath);
+        Photo photo = mediaItemFactory.create(apachePhotoPath);
         LocalDate testDate = LocalDate.now();
         photo.setDate(testDate);
         assertEquals(testDate, photo.getDate().get());
@@ -105,27 +114,25 @@ public class MediaItemTest {
     @Test
     @DisplayName ("toString")
     void toStringTest() {
-        Photo photo = new Photo(apachePhotoPath);
-        String expectedString = "[1] " + apachePhotoPath.getFileName().toString();
+        Photo photo = mediaItemFactory.create(apachePhotoPath);
+        String expectedString = "[0] " + apachePhotoPath.getFileName().toString();
         assertEquals(expectedString, photo.toString());
     }
 
     @Test
     @DisplayName ("Hashcode")
     void hashCodeTest() {
-        Photo photo = new Photo(gnuPhotoPath);
-        int hash = 73;
-        hash = 73 * hash + gnuPhotoPath.toFile().getParent().hashCode();
-        hash = 73 * hash + gnuPhotoPath.getFileName().toString().hashCode();
+        Photo photo = mediaItemFactory.create(gnuPhotoPath);
+        int hash = Objects.hash(gnuPhotoPath.toFile().getParent(), gnuPhotoPath.getFileName());
         assertEquals(hash, photo.hashCode());
     }
 
     @Test
     @DisplayName ("Equals")
     void equalsTest() {
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
-        Photo gnuPhoto2 = new Photo(gnuPhotoPath);
-        Photo apachePhoto = new Photo(apachePhotoPath);
+        Photo gnuPhoto = mediaItemFactory.create(gnuPhotoPath);
+        Photo gnuPhoto2 = mediaItemFactory.create(gnuPhotoPath);
+        Photo apachePhoto = mediaItemFactory.create(apachePhotoPath);
         assertFalse(gnuPhoto.equals(apachePhoto));
         assertTrue(gnuPhoto.equals(gnuPhoto2));
     }
@@ -133,20 +140,20 @@ public class MediaItemTest {
     @Test
     @DisplayName ("Not Equals with other class")
     void notEqualsTest() {
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
-        Album album = new Album("Album");
+        Photo gnuPhoto = mediaItemFactory.create(gnuPhotoPath);
+        Album album = new Album(0, "Album");
         assertFalse(gnuPhoto.equals(album));
     }
 
     @Test
     @DisplayName ("Not Equals photo in other folder")
     void notEqualsDifferentFolder() throws Exception {
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
+        Photo gnuPhoto = mediaItemFactory.create(gnuPhotoPath);
 
         File photoPathTemporary =  File.createTempFile("photo_apache.jpg", "");
         photoPathTemporary.deleteOnExit();
         Files.copy(apachePhotoPath, photoPathTemporary.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Photo apachePhoto = new Photo(photoPathTemporary.toPath());
+        Photo apachePhoto = new Photo(1, photoPathTemporary.toPath());
 
         assertFalse(gnuPhoto.equals(apachePhoto));
     }

@@ -19,8 +19,6 @@
 
 package com.transgressoft.photocrypt.model;
 
-import com.transgressoft.photocrypt.*;
-
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
@@ -37,16 +35,15 @@ public abstract class MediaItem {
     private String title;
     private String description;
     private String location;
-    private Optional<LocalDate> date;
+    private LocalDate date;
 
-    public MediaItem(Path pathToMedia) {
-        id = PhotoCryptPreferences.getInstance().getMediaItemSequence();
+    public MediaItem(int id, Path pathToMedia) {
+        this.id = id;
         fileFolder = pathToMedia.toFile().getParent();
         fileName = pathToMedia.getFileName().toString();
         title = "";
         description = "";
         location = "";
-        date = Optional.empty();
     }
 
     public int getId() {
@@ -91,11 +88,11 @@ public abstract class MediaItem {
     }
 
     public Optional<LocalDate> getDate() {
-        return this.date;
+        return Optional.ofNullable(date);
     }
 
     public void setDate(LocalDate date) {
-        this.date = Optional.of(date);
+        this.date = date;
     }
 
     @Override
@@ -105,10 +102,7 @@ public abstract class MediaItem {
 
     @Override
     public int hashCode() {
-        int hash = 73;
-        hash = 73 * hash + fileFolder.hashCode();
-        hash = 73 * hash + fileName.hashCode();
-        return hash;
+        return Objects.hash(fileFolder, fileName);
     }
 
     @Override

@@ -17,34 +17,21 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.error;
+package com.transgressoft.photocrypt.util.guice.modules;
 
-import java.util.concurrent.atomic.*;
+import com.google.inject.*;
+import com.google.inject.assistedinject.*;
+import com.transgressoft.photocrypt.model.*;
+import com.transgressoft.photocrypt.util.guice.factories.*;
 
 /**
- * Singleton class that handles the exceptions.
- *
  * @author Octavio Calleya
- * @version 0.1
  */
-public class ErrorDaemon {
+public class AlbumFactoryModule extends AbstractModule {
 
-    private AtomicInteger errorCount = new AtomicInteger(0);
-
-    public static ErrorDaemon getInstance() {
-        return InstanceHolder.INSTANCE;
-    }
-
-    private static class InstanceHolder {
-
-        static final ErrorDaemon INSTANCE = new ErrorDaemon();
-    }
-
-    public CryptoException exception(ErrorCase errorCase) {
-        return new CryptoException(errorCount.getAndIncrement(), errorCase);
-    }
-
-    public CryptoException exception(ErrorCase errorCase, Throwable cause) {
-        return new CryptoException(errorCount.getAndIncrement(), errorCase, cause);
+    @Override
+    protected void configure() {
+        Module module = new FactoryModuleBuilder().implement(Album.class, Album.class).build(AlbumFactory.class);
+        install(module);
     }
 }

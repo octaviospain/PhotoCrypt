@@ -17,21 +17,22 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.error;
+package com.transgressoft.photocrypt.util.guice.annotations;
 
-import org.junit.jupiter.api.*;
+import com.google.inject.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.lang.annotation.*;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
 
 /**
  * @author Octavio Calleya
  */
-public class CryptoExceptionTest {
+@Retention (RetentionPolicy.RUNTIME)
+@Target ({FIELD, PARAMETER, METHOD})
+@BindingAnnotation
+public @interface AlbumSequence {
 
-    @Test
-    @DisplayName("toString")
-    void toStringTest() {
-        CryptoException exception = new CryptoException(ErrorCase.CRYPTO_ERROR);
-        assertTrue(exception.toString().matches("\\[\\d+ ENCRYPT_DECRYPT]: Error applying crypto to media item"));
-    }
 }

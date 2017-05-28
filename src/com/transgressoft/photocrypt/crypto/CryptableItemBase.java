@@ -46,15 +46,13 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
     private static final String ALGORITHM = "AES/CTR/NoPadding";
     private static final String ENCRYPTED_EXTENSION = ".enc";
 
-    protected ErrorDaemon errorDaemon = ErrorDaemon.getInstance();
-
     private boolean isEncrypted;
     private Cipher cipher;
     private IvParameterSpec initializationVector;
 
 
-    public CryptableItemBase(Path pathToMedia) {
-        super(pathToMedia);
+    public CryptableItemBase(int id, Path pathToMedia) {
+        super(id, pathToMedia);
     }
 
     public boolean isEncrypted() {
@@ -73,7 +71,7 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
      */
     public void encrypt(final String password) throws CryptoException {
         if (isEncrypted)
-            throw errorDaemon.exception(ITEM_ALREADY_ENCRYPTED);
+            throw new CryptoException(ITEM_ALREADY_ENCRYPTED);
         doCrypto(Cipher.ENCRYPT_MODE, password);
         isEncrypted = true;
     }
@@ -89,7 +87,7 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
      */
     public void decrypt(final String password) throws CryptoException {
         if (! isEncrypted)
-            throw errorDaemon.exception(ITEM_NOT_ENCRYPTED);
+            throw new CryptoException(ITEM_NOT_ENCRYPTED);
         doCrypto(Cipher.DECRYPT_MODE, password);
         isEncrypted = false;
     }
@@ -119,7 +117,7 @@ public abstract class CryptableItemBase extends MediaItem implements CryptableIt
             fileName = fileName.replaceAll(ENCRYPTED_EXTENSION, "");
             String errorMessage = CRYPTO_ERROR.getErrorMessage() + " " + this.toString() + ": " + exception.getMessage();
             LOG.error(errorMessage, exception);
-            throw errorDaemon.exception(CRYPTO_ERROR, exception);
+            throw new CryptoException(CRYPTO_ERROR, exception);
         }
     }
 

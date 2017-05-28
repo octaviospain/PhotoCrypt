@@ -19,7 +19,9 @@
 
 package com.transgressoft.photocrypt.model;
 
-import com.transgressoft.photocrypt.*;
+import com.google.inject.*;
+import com.google.inject.assistedinject.*;
+import com.transgressoft.photocrypt.util.guice.annotations.*;
 
 import java.util.*;
 
@@ -36,8 +38,9 @@ public class Album {
     private String location;
     private List<Photo> photos;
 
-    public Album(String name) {
-        id = PhotoCryptPreferences.getInstance().getAlbumSequence();
+    @Inject
+    public Album(@AlbumSequence int id, @Assisted String name) {
+        this.id = id;
         this.name = name;
         location = "";
         photos = new ArrayList<>();
@@ -92,11 +95,7 @@ public class Album {
 
     @Override
     public int hashCode() {
-        int hash = 73;
-        hash = 73 * hash + name.hashCode();
-        hash = 73 * hash + getLocation().hashCode();
-        hash = 73 * hash + photos.hashCode();
-        return hash;
+        return Objects.hash(name, getLocation(), photos);
     }
 
     @Override
