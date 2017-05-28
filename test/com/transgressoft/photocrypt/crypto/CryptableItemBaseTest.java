@@ -19,33 +19,52 @@
 
 package com.transgressoft.photocrypt.crypto;
 
+import com.google.common.io.Files;
+import com.google.inject.*;
+import com.transgressoft.photocrypt.*;
 import com.transgressoft.photocrypt.error.*;
 import com.transgressoft.photocrypt.model.*;
+import com.transgressoft.photocrypt.tests.*;
+import com.transgressoft.photocrypt.util.guice.factories.*;
+import com.transgressoft.photocrypt.util.guice.modules.*;
 import org.apache.commons.io.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
 
 import java.io.*;
 import java.nio.file.*;
 
-import static java.nio.file.StandardCopyOption.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Octavio Calleya
  * @version 0.1
  */
+@ExtendWith (MockitoExtension.class)
 public class CryptableItemBaseTest {
 
     static final String ENCRYPTED_EXTENSION = ".enc";
+    @Mock
+    PhotoCryptPreferences preferencesMock;
+    MediaItemFactory mediaItemFactory;
+    Injector injector;
     String gnuPhotoFileName = "photo_gnu.png";
     Path photoPath = Paths.get("test-resources", gnuPhotoFileName);
-    File photoPathTemporary;
+    File photoPathTemporary = Files.createTempDir();
 
     @BeforeEach
     void beforeEach() throws Exception {
         photoPathTemporary = File.createTempFile(gnuPhotoFileName, "");
         photoPathTemporary.deleteOnExit();
-        Files.copy(photoPath, photoPathTemporary.toPath(), REPLACE_EXISTING);
+        Files.copy(photoPath.toFile(), photoPathTemporary);
+
+        injector = Guice.createInjector(binder ->
+            binder.bind(PhotoCryptPreferences.class).toInstance(preferencesMock));
+        injector = injector.createChildInjector(new PhotoCryptModule());
+        when(preferencesMock.getMediaItemSequence()).thenReturn(0);
+        mediaItemFactory = injector.getInstance(MediaItemFactory.class);
     }
 
     @Test
@@ -53,11 +72,11 @@ public class CryptableItemBaseTest {
     void encryptDecrypt() throws Exception {
         File photoCopy = File.createTempFile(gnuPhotoFileName, "");
         photoCopy.deleteOnExit();
-        Files.copy(photoPathTemporary.toPath(), photoCopy.toPath(), REPLACE_EXISTING);
+        Files.copy(photoPathTemporary, photoCopy);
 
         assertTrue(FileUtils.contentEquals(photoPathTemporary, photoCopy));
 
-        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        Photo gnuPhoto = mediaItemFactory.create(photoPathTemporary.toPath());
         String password = "Symmetric encryption password";
 
 
@@ -79,7 +98,7 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Encrypt")
     void encryptTest() throws Exception {
-        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        Photo gnuPhoto = mediaItemFactory.create(photoPathTemporary.toPath());
         String password = "Symmetric encryption password";
 
         assertFalse(gnuPhoto.isEncrypted());
@@ -95,7 +114,7 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Encrypt an already encrypted item")
     void invalidEncryption() throws Exception {
-        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        Photo gnuPhoto = mediaItemFactory.create(photoPathTemporary.toPath());
         String password = "Symmetric encryption password";
 
         assertFalse(gnuPhoto.isEncrypted());
@@ -105,16 +124,16 @@ public class CryptableItemBaseTest {
 
         assertTrue(encryptedFile.exists());
 
-        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(password));
+        CryptoException exception = assertThrows(CryptoException.class, () -> gnuPhoto.encrypt(password));
         assertEquals("Media item already encrypted", exception.getMessage());
     }
 
     @Test
     @DisplayName ("Encryption failed")
     void encryptionFailed() throws Exception {
-        Photo gnuPhoto = new Photo(new File("./nonexistentfile.jpg").toPath());
+        Photo gnuPhoto = mediaItemFactory.create(new File("./nonexistentfile.jpg").toPath());
 
-        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.encrypt(""));
+        CryptoException exception = assertThrows(CryptoException.class, () -> gnuPhoto.encrypt(""));
         assertEquals("Error applying crypto to media item", exception.getMessage());
         assertTrue(exception.getCause().getMessage().contains("(No such file or directory)"));
     }
@@ -122,7 +141,7 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Decrypt")
     void decryptTest() throws Exception {
-        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        Photo gnuPhoto = mediaItemFactory.create(photoPathTemporary.toPath());
         String password = "Symmetric encryption password";
 
         gnuPhoto.encrypt(password);
@@ -136,12 +155,12 @@ public class CryptableItemBaseTest {
     @Test
     @DisplayName ("Decrypt an already decrypted item")
     void invalidDecryption() throws Exception {
-        Photo gnuPhoto = new Photo(photoPathTemporary.toPath());
+        Photo gnuPhoto = mediaItemFactory.create(photoPathTemporary.toPath());
         String password = "Symmetric encryption password";
 
         assertFalse(gnuPhoto.isEncrypted());
 
-        CryptoException exception = expectThrows(CryptoException.class, () -> gnuPhoto.decrypt(password));
+        CryptoException exception = assertThrows(CryptoException.class, () -> gnuPhoto.decrypt(password));
         assertEquals("Media item is not encrypted", exception.getMessage());
     }
 }

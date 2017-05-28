@@ -19,6 +19,8 @@
 
 package com.transgressoft.photocrypt.error;
 
+import java.util.concurrent.atomic.*;
+
 /**
  * This exception is thrown if an attempt to encrypt or decrypt
  * a {@link com.transgressoft.photocrypt.model.MediaItem} instance was unsuccessful.
@@ -28,18 +30,20 @@ package com.transgressoft.photocrypt.error;
  */
 public class CryptoException extends Exception {
 
+    private static AtomicInteger exceptionSequence = new AtomicInteger(0);
+
     private ErrorCase errorCase;
     private int exceptionId;
 
-    public CryptoException(int id,  ErrorCase errorCase) {
+    public CryptoException(ErrorCase errorCase) {
         super(errorCase.getErrorMessage());
-        exceptionId = id;
+        exceptionId = exceptionSequence.incrementAndGet();
         this.errorCase = errorCase;
     }
 
-    public CryptoException(int id, ErrorCase errorCase, Throwable cause) {
+    public CryptoException(ErrorCase errorCase, Throwable cause) {
         super(errorCase.getErrorMessage(), cause);
-        exceptionId = id;
+        exceptionId = exceptionSequence.incrementAndGet();
         this.errorCase = errorCase;
     }
 

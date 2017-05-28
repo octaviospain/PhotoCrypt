@@ -19,7 +19,12 @@
 
 package com.transgressoft.photocrypt;
 
+import com.google.common.io.*;
+import com.google.inject.*;
+import com.transgressoft.photocrypt.model.*;
+
 import java.io.*;
+import java.util.concurrent.atomic.*;
 import java.util.prefs.*;
 
 /**
@@ -29,6 +34,7 @@ import java.util.prefs.*;
  * @author Octavio Calleya
  * @version 0.1
  */
+@Singleton
 public class PhotoCryptPreferences {
 
     private static final String MEDIA_ITEM_SEQUENCE = "media_item_sequence";
@@ -40,18 +46,22 @@ public class PhotoCryptPreferences {
      */
     private static final String PHOTOCRYPT_FOLDER = "photocrypt_folder";
 
-    private static PhotoCryptPreferences instance;
+    @Inject
+    private MediaLibrary mediaLibrary;
+    @Inject
+    private AlbumsLibrary albumsLibrary;
+    @Inject
+    private PersonsLibrary personsLibrary;
+    private AtomicInteger mediaItemSequence;
+    private AtomicInteger albumSequence;
+    private AtomicInteger personSequence;
     private Preferences preferences;
 
-    private PhotoCryptPreferences() {
+    public PhotoCryptPreferences() {
         preferences = Preferences.userNodeForPackage(getClass());
-    }
-
-    public static PhotoCryptPreferences getInstance() {
-        if (instance == null) {
-            instance = new PhotoCryptPreferences();
-        }
-        return instance;
+        mediaItemSequence = new AtomicInteger(preferences.getInt(MEDIA_ITEM_SEQUENCE, 0));
+        albumSequence = new AtomicInteger(preferences.getInt(ALBUM_SEQUENCE, 0));
+        personSequence = new AtomicInteger(preferences.getInt(PERSON_SEQUENCE, 0));
     }
 
     /**
@@ -62,9 +72,14 @@ public class PhotoCryptPreferences {
      * @return The next integer to use
      */
     public int getMediaItemSequence() {
-        int sequence = preferences.getInt(MEDIA_ITEM_SEQUENCE, 0);
-        preferences.putInt(MEDIA_ITEM_SEQUENCE, ++ sequence);
-        return sequence;
+        while (mediaLibrary.getMediaItem(mediaItemSequence.getAndIncrement()).isPresent()) ;
+        preferences.putInt(MEDIA_ITEM_SEQUENCE, mediaItemSequence.get());
+        return mediaItemSequence.get();
+    }
+
+    public void resetMediaItemSequence() {
+        mediaItemSequence.set(0);
+        preferences.putInt(MEDIA_ITEM_SEQUENCE, 0);
     }
 
     /**
@@ -75,9 +90,14 @@ public class PhotoCryptPreferences {
      * @return The next integer to use
      */
     public int getAlbumSequence() {
-        int sequence = preferences.getInt(ALBUM_SEQUENCE, 0);
-        preferences.putInt(ALBUM_SEQUENCE, ++ sequence);
-        return sequence;
+        while (albumsLibrary.getAlbum(albumSequence.getAndIncrement()).isPresent()) ;
+        preferences.putInt(ALBUM_SEQUENCE, albumSequence.get());
+        return albumSequence.get();
+    }
+
+    public void resetAlbumSequence() {
+        albumSequence.set(0);
+        preferences.putInt(ALBUM_SEQUENCE, 0);
     }
 
     /**
@@ -88,9 +108,14 @@ public class PhotoCryptPreferences {
      * @return The next integer to use
      */
     public int getPersonSequence() {
-        int sequence = preferences.getInt(PERSON_SEQUENCE, 0);
-        preferences.putInt(PERSON_SEQUENCE, ++ sequence);
-        return sequence;
+        while (personsLibrary.getPerson(personSequence.getAndIncrement()).isPresent()) ;
+        preferences.putInt(PERSON_SEQUENCE, albumSequence.get());
+        return personSequence.get();
+    }
+
+    public void resetPersonSequence() {
+        personSequence.set(0);
+        preferences.putInt(PERSON_SEQUENCE, 0);
     }
 
     /**
@@ -100,12 +125,9 @@ public class PhotoCryptPreferences {
      *
      * @return <tt>true</tt> if the creation of the directory was successful, <tt>false</tt> otherwise
      */
-    public boolean setPhotoCryptUserFolder(String path) {
+    public void setPhotoCryptUserFolder(String path) throws IOException {
+        Files.createParentDirs(new File(path, "test"));
         preferences.put(PHOTOCRYPT_FOLDER, path);
-        preferences.putInt(MEDIA_ITEM_SEQUENCE, 0);
-        preferences.putInt(ALBUM_SEQUENCE, 0);
-        preferences.putInt(PERSON_SEQUENCE, 0);
-        return new File(path).mkdirs();
     }
 
     public String getPhotocryptFolderUserFolder() {

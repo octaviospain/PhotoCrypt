@@ -19,56 +19,63 @@
 
 package com.transgressoft.photocrypt.model;
 
+import com.google.inject.*;
 import com.transgressoft.photocrypt.*;
+import com.transgressoft.photocrypt.tests.*;
+import com.transgressoft.photocrypt.util.guice.factories.*;
+import com.transgressoft.photocrypt.util.guice.modules.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
 
-import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Octavio Calleya
  * @version 0.1
  */
+@ExtendWith (MockitoExtension.class)
 public class AlbumTest {
 
-    String home = System.getProperty("os.home");
+    @Mock
+    PhotoCryptPreferences preferencesMock;
+    AlbumFactory albumFactory;
+    Injector injector;
     Path gnuPhotoPath = Paths.get("test-resources", "photo_gnu.png");
     Path apachePhotoPath = Paths.get("test-resources", "photo_apache.jpg");
 
     @BeforeEach
     void beforeEach() {
-        PhotoCryptPreferences.getInstance().setPhotoCryptUserFolder(home + "PhotoCrypt" + File.separator);
+        injector = Guice.createInjector(binder -> binder.bind(PhotoCryptPreferences.class).toInstance(preferencesMock));
+        injector = injector.createChildInjector(new PhotoCryptModule());
+        when(preferencesMock.getAlbumSequence()).thenReturn(0);
+        albumFactory = injector.getInstance(AlbumFactory.class);
     }
-
-    @AfterEach
-    void afterEach() {
-        assertTrue(new File(home + "PhotoCrypt" + File.separator).delete());
-    }
-
+    
     @Test
     @DisplayName("Encrypt All")
     void encryptAllTest() {
-        Album album = new Album("Trip to Hawaii");
-        UnsupportedOperationException exception = expectThrows(UnsupportedOperationException.class,
-                                                 () -> album.encryptAll());
+        Album album = albumFactory.create("Trip to Hawaii");
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, album::encryptAll);
         assertEquals("Unsupported yet", exception.getMessage());
     }
 
     @Test
     @DisplayName ("Constructor")
     void constructorTest() {
-        Album album = new Album("Trip to Hawaii");
-        assertEquals(1, album.getId());
+        Album album = albumFactory.create("Trip to Hawaii");
+        assertEquals(0, album.getId());
         assertEquals("Trip to Hawaii", album.getName());
     }
 
     @Test
     @DisplayName ("Name")
     void nameTest() {
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         album.setName("Trip to the Pacific");
         assertEquals("Trip to the Pacific", album.getName());
     }
@@ -76,21 +83,21 @@ public class AlbumTest {
     @Test
     @DisplayName ("Most recent photo")
     void mostRecentPhotoTest() {
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         assertEquals(Optional.empty(), album.getMostRecentPhoto());
     }
 
     @Test
     @DisplayName ("Older photo")
     void olderPhotoTest() {
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         assertEquals(Optional.empty(), album.getOlderPhoto());
     }
 
     @Test
     @DisplayName ("Location")
     void locationTest() {
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         album.setLocation("Hawaii");
         assertTrue(album.getLocation().isPresent());
         assertEquals("Hawaii", album.getLocation().get());
@@ -99,12 +106,12 @@ public class AlbumTest {
     @Test
     @DisplayName ("Photos")
     void photosTest() {
-        Photo apachePhoto = new Photo(apachePhotoPath);
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
+        Photo apachePhoto = new Photo(0, apachePhotoPath);
+        Photo gnuPhoto = new Photo(1 ,gnuPhotoPath);
         List<Photo> photos = new ArrayList<>();
         photos.add(apachePhoto);
 
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         album.addPhotos(photos);
 
         assertEquals(photos, album.getPhotos());
@@ -118,25 +125,22 @@ public class AlbumTest {
     @Test
     @DisplayName ("toString")
     void toStringTest() {
-        Album album = new Album("Trip to Hawaii");
-        String expectedString = "[1] Trip to Hawaii (0)";
+        Album album = albumFactory.create("Trip to Hawaii");
+        String expectedString = "[0] Trip to Hawaii (0)";
         assertEquals(expectedString, album.toString());
     }
 
     @Test
     @DisplayName("hashCode")
     void hashCodeTest() {
-        Album album = new Album("Trip to Hawaii");
-        Photo apachePhoto = new Photo(apachePhotoPath);
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
+        Album album = albumFactory.create("Trip to Hawaii");
+        Photo apachePhoto = new Photo(0, apachePhotoPath);
+        Photo gnuPhoto = new Photo(1, gnuPhotoPath);
         List<Photo> photos = new ArrayList<>();
         photos.add(apachePhoto);
         photos.add(gnuPhoto);
         album.addPhotos(photos);
-        int hash = 73;
-        hash = 73 * hash + "Trip to Hawaii".hashCode();
-        hash = 73 * hash + Optional.empty().hashCode();
-        hash = 73 * hash + photos.hashCode();
+        int hash = Objects.hash("Trip to Hawaii", Optional.empty(), photos);
 
         assertEquals(hash, album.hashCode());
     }
@@ -144,12 +148,12 @@ public class AlbumTest {
     @Test
     @DisplayName("Equals")
     void equalsTest() {
-        Album album = new Album("Trip to Hawaii");
-        Photo apachePhoto = new Photo(apachePhotoPath);
+        Album album = new Album(1, "Trip to Hawaii");
+        Photo apachePhoto = new Photo(1, apachePhotoPath);
         album.addPhotos(Collections.singletonList(apachePhoto));
 
-        Album album2 = new Album("Trip to Hawaii");
-        Photo gnuPhoto = new Photo(gnuPhotoPath);
+        Album album2 = new Album(1, "Trip to Hawaii");
+        Photo gnuPhoto = new Photo(1, gnuPhotoPath);
         album2.addPhotos(Collections.singletonList(gnuPhoto));
 
         assertFalse(album.equals(album2));
@@ -163,15 +167,15 @@ public class AlbumTest {
     @Test
     @DisplayName("Not Equals with other class")
     void notEqualsTest() {
-        Album album = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
         assertFalse(album.equals(apachePhotoPath));
     }
 
     @Test
     @DisplayName("Not Equals with different location album")
     void notEqualsDifferentLocationTest() {
-        Album album = new Album("Trip to Hawaii");
-        Album album2 = new Album("Trip to Hawaii");
+        Album album = albumFactory.create("Trip to Hawaii");
+        Album album2 = new Album(1, "Trip to Hawaii");
         album2.setLocation("Hawaii");
         assertFalse(album.equals(album2));
     }
@@ -179,8 +183,8 @@ public class AlbumTest {
     @Test
     @DisplayName("Not Equals with different name album")
     void notEqualsDifferentNameTest() {
-        Album album = new Album("Trip to Hawaii");
-        Album album2 = new Album("Trip to Maldives");
+        Album album = albumFactory.create("Trip to Hawaii");
+        Album album2 = new Album(1, "Trip to Maldives");
         assertFalse(album.equals(album2));
     }
 }

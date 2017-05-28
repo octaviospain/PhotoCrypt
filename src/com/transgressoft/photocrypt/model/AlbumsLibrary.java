@@ -17,21 +17,19 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.error;
+package com.transgressoft.photocrypt.model;
 
-import org.junit.jupiter.api.*;
+import com.google.inject.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.*;
 
 /**
  * @author Octavio Calleya
  */
-public class CryptoExceptionTest {
+@Singleton
+public class AlbumsLibrary {
 
-    @Test
-    @DisplayName("toString")
-    void toStringTest() {
-        CryptoException exception = new CryptoException(ErrorCase.CRYPTO_ERROR);
-        assertTrue(exception.toString().matches("\\[\\d+ ENCRYPT_DECRYPT]: Error applying crypto to media item"));
+    public Optional<Album> getAlbum(int albumId) {
+        return null;
     }
 }

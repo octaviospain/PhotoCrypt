@@ -17,21 +17,16 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.error;
+package com.transgressoft.photocrypt.util.guice.factories;
 
-import org.junit.jupiter.api.*;
+import com.transgressoft.photocrypt.model.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.nio.file.*;
 
 /**
  * @author Octavio Calleya
  */
-public class CryptoExceptionTest {
+public interface MediaItemFactory {
 
-    @Test
-    @DisplayName("toString")
-    void toStringTest() {
-        CryptoException exception = new CryptoException(ErrorCase.CRYPTO_ERROR);
-        assertTrue(exception.toString().matches("\\[\\d+ ENCRYPT_DECRYPT]: Error applying crypto to media item"));
-    }
+    Photo create(Path filePath);
 }

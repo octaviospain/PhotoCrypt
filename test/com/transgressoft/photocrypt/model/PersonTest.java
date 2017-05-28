@@ -19,44 +19,53 @@
 
 package com.transgressoft.photocrypt.model;
 
+import com.google.inject.*;
 import com.transgressoft.photocrypt.*;
+import com.transgressoft.photocrypt.tests.*;
+import com.transgressoft.photocrypt.util.guice.factories.*;
+import com.transgressoft.photocrypt.util.guice.modules.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+import org.mockito.*;
 
-import java.io.*;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Octavio Calleya
  * @version 0.1
  */
+@ExtendWith (MockitoExtension.class)
 public class PersonTest {
 
-    String home = System.getProperty("os.home");
+    @Mock
+    PhotoCryptPreferences preferencesMock;
+    PersonFactory personFactory;
+    Injector injector;
 
     @BeforeEach
     void beforeEach() {
-        PhotoCryptPreferences.getInstance().setPhotoCryptUserFolder(home + "PhotoCrypt" + File.separator);
-    }
 
-    @AfterEach
-    void afterEach() {
-        assertTrue(new File(home + "PhotoCrypt" + File.separator).delete());
+        injector = Guice.createInjector(binder -> binder.bind(PhotoCryptPreferences.class).toInstance(preferencesMock));
+        injector = injector.createChildInjector(new PhotoCryptModule());
+        when(preferencesMock.getPersonSequence()).thenReturn(0);
+        personFactory = injector.getInstance(PersonFactory.class);
     }
-
 
     @Test
     @DisplayName("Constructor")
     void constructorTest() {
-        Person person = new Person("Linus Torvalds");
+        Person person = personFactory.create("Linus Torvalds");
         assertEquals("Linus Torvalds", person.getFullName());
-        assertEquals(1, person.getId());
+        assertEquals(0, person.getId());
     }
 
     @Test
     @DisplayName("Full name")
     void fullNameTest() {
-        Person person = new Person("Linus Torvalds");
+        Person person = personFactory.create("Linus Torvalds");
         person.setFullName("Dennis Ritchie");
         assertEquals("Dennis Ritchie", person.getFullName());
     }
@@ -64,25 +73,25 @@ public class PersonTest {
     @Test
     @DisplayName("toString")
     void toStringTest() {
-        Person person = new Person("Linus Torvalds");
-        String expectedString = "[1] Linus Torvalds";
+        Person person = personFactory.create("Linus Torvalds");
+        String expectedString = "[0] Linus Torvalds";
         assertEquals(expectedString, person.toString());
     }
 
     @Test
     @DisplayName("hashCode")
     void hashCodeTest() {
-        Person person = new Person("Linus Torvalds");
-        int hashCode = 73 + "Linus Torvalds".hashCode();
+        Person person = personFactory.create("Linus Torvalds");
+        int hashCode = Objects.hash("Linus Torvalds");
         assertEquals(hashCode, person.hashCode());
     }
 
     @Test
     @DisplayName("Equals")
     void equalsTest() {
-        Person linus = new Person("Linus Torvalds");
-        Person dennis = new Person("Dennis Ritchie");
-        Person linus2 = new Person("Linus Torvalds");
+        Person linus = personFactory.create("Linus Torvalds");
+        Person dennis = personFactory.create("Dennis Ritchie");
+        Person linus2 = personFactory.create("Linus Torvalds");
         assertFalse(linus.equals(dennis));
         assertTrue(linus.equals(linus2));
     }
@@ -90,8 +99,8 @@ public class PersonTest {
     @Test
     @DisplayName("Not equals with class")
     void notEqualsTest() {
-        Person linus = new Person("Linus Torvalds");
-        Album album = new Album("Album");
+        Person linus = personFactory.create("Linus Torvalds");
+        Album album = new Album(1, "Album");
         assertFalse(linus.equals(album));
     }
 }

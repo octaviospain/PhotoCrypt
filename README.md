@@ -13,6 +13,7 @@ PhotoCrypt is an application that organizes a photo library allowing the possibi
 * Tasks scheduling with concurrency (encrypt/decrypt multiple files)
 * Encryption/decryption functionality using the [JCA architecture](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html "JCA")
 * Ability to move/restore files to/from external devices
+* Read EXIF metadata with Metadata Extractor 
 * Allow also video management in the application
 
 ## License

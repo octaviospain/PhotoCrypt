@@ -17,23 +17,39 @@
  * Copyright (C) 2016, 2017 Octavio Calleya
  */
 
-package com.transgressoft.photocrypt.model;
+package com.transgressoft.photocrypt.util.guice.modules;
 
 import com.google.inject.*;
-import com.google.inject.assistedinject.*;
-import com.transgressoft.photocrypt.crypto.*;
+import com.transgressoft.photocrypt.*;
 import com.transgressoft.photocrypt.util.guice.annotations.*;
-
-import java.nio.file.*;
 
 /**
  * @author Octavio Calleya
- * @version 0.1
  */
-public class Photo extends CryptableItemBase {
+public class PhotoCryptModule extends AbstractModule {
 
-    @Inject
-    public Photo(@MediaItemSequence int id, @Assisted Path filePath) {
-        super(id ,filePath);
+    @Override
+    protected void configure() {
+        install(new AlbumFactoryModule());
+        install(new MediaItemFactoryModule());
+        install(new PersonFactoryModule());
+    }
+
+    @Provides
+    @AlbumSequence
+    Integer providesAlbumSequence(PhotoCryptPreferences preferences) {
+        return preferences.getAlbumSequence();
+    }
+
+    @Provides
+    @MediaItemSequence
+    Integer providesMediaItemSequence(PhotoCryptPreferences preferences) {
+        return preferences.getMediaItemSequence();
+    }
+
+    @Provides
+    @PersonSequence
+    Integer providesPersonSequence(PhotoCryptPreferences preferences) {
+        return preferences.getPersonSequence();
     }
 }
