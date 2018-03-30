@@ -6,5 +6,6 @@
 *.iml
 *.fxbuild
 
-/target/
+photocrypt-api/target/
+photocrypt-core/target/
 /build/
