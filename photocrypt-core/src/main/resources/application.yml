@@ -1,0 +1,9 @@
+logging:
+  level:
+    org.springframework.web: ERROR
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level %thread %logger{36}%n%msg%n"
+
+spring:
+  main:
+    banner-mode: "off"
